@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from './login.tsx';
 import Dashboard from './dashboard.tsx';
 import ForgotPassword from './ForgotPassword';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './AuthProvider';
 
 function App() {
 
