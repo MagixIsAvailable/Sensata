@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 function Login() {
-  const [email, setEmail] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [emailError, setEmailError] = useState<string>('');
-  const [passwordError, setPasswordError] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const [time, setTime] = useState<string>(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -18,48 +19,38 @@ function Login() {
     return () => clearInterval(timerId);
   }, []);
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /\S+@\S+\.\S+/;
-    if (!emailRegex.test(email)) {
-      setEmailError('Please enter a valid email address.');
-      return false;
-    }
-    setEmailError('');
-    return true;
-  };
-
-  const validatePassword = (password: string): boolean => {
-    if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters long.');
-      return false;
-    }
-    setPasswordError('');
-    return true;
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePassword(password);
+    setError('');
 
-    if (!isEmailValid || !isPasswordValid) {
-      return; // Stop form submission if validation fails
+    // Local validation
+    if (username !== 'admin@admin.com') {
+      setError('Access denied. Admin only.');
+      return;
     }
 
-    // Mock API call logic (can be replaced with actual API integration)
-    console.log('Form submitted successfully:', { email, password });
+    try {
+      const response = await fetch('/api/v1/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-    // Navigate to another route upon successful login
-    navigate('/dashboard'); // Replace '/dashboard' with your desired route
-  };
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
 
-  const handleForgotPassword = () => {
-    navigate('/forgot-password');
+      const data = await response.json();
+      login(data.access_token);
+      navigate('/admin');
+    } catch (err) {
+      setError('Login failed');
+    }
   };
 
   return (
     <div className="login-container">
-      <form onSubmit={handleLogin} className="login-form">
+      <form onSubmit={handleSubmit} className="login-form">
         <h2 className="login-heading">Login to Sensata</h2>
         <div className="digital-clock">
           <div className="time-display">{time}</div>
@@ -69,12 +60,11 @@ function Login() {
           <input
             type="email"
             id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onBlur={() => validateEmail(email)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Email"
             required
           />
-          {emailError && <p className="error-message">{emailError}</p>}
         </div>
         <div className="form-group">
           <label htmlFor="password">Password</label>
@@ -83,13 +73,12 @@ function Login() {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onBlur={() => validatePassword(password)}
+            placeholder="Password"
             required
           />
-          {passwordError && <p className="error-message">{passwordError}</p>}
         </div>
+        {error && <div className="error">{error}</div>}
         <button type="submit">Login</button>
-        <p className="forgot-password" onClick={handleForgotPassword}>Forgot password?</p>
       </form>
     </div>
   );
