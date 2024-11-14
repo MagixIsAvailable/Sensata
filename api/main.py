@@ -3,6 +3,7 @@ from typing import Annotated, Union
 from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 
 from sqlalchemy.util import b64decode
 from sqlmodel import Session, create_engine, select
@@ -78,6 +79,10 @@ def get_session():
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
+# Type aliases and dependencies
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+TokenDep = Annotated[str, Depends(oauth2_scheme)]
+
 
 @app.on_event("startup")
 def on_startup():
@@ -95,7 +100,10 @@ async def read_root():
 
 # list api keys
 @app.get("/api/v1/admin/list_api_keys")
-async def list_api_keys(session: SessionDep):
+async def list_api_keys(
+    session: SessionDep,
+    _: User = Depends(verify_admin)
+):
     """
     Lists all api keys
 
@@ -136,7 +144,10 @@ async def create_api_key(user_id: int, session: SessionDep):
 
 # list all users
 @app.get("/api/v1/admin/list_users")
-async def list_users(session: SessionDep):
+async def list_users(
+    session: SessionDep,
+    _: User = Depends(verify_admin)
+):
     """
     List all users
 
@@ -555,3 +566,37 @@ def get_is_admin(session_token: str, session: SessionDep):
         raise HTTPException(status_code=404, detail="User not found")
 
     return {"is_admin": user.is_admin}
+
+
+async def get_current_user(
+    token: TokenDep,
+    session: SessionDep
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = session.exec(select(User).where(User.email == username)).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+async def verify_admin(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: SessionDep
+) -> User:
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required"
+        )
+    return current_user
