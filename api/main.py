@@ -104,12 +104,6 @@ async def list_api_keys(
     session: SessionDep,
     _: User = Depends(verify_admin)
 ):
-    """
-    Lists all api keys
-
-    todo: implement authentication and pagination
-    """
-
     keys = session.exec(select(ApiKey)).all()
     return keys
 
@@ -148,11 +142,6 @@ async def list_users(
     session: SessionDep,
     _: User = Depends(verify_admin)
 ):
-    """
-    List all users
-
-    todo: implement authentication
-    """
     users = session.exec(select(User)).all()
     return users
 
