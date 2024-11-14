@@ -4,20 +4,23 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from './login.tsx';
 import Dashboard from './dashboard.tsx';
 import ForgotPassword from './ForgotPassword';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
 
   return (
     // Todo - add validation so that the user can't access /dashboard without being signed in
-    <ChakraProvider value={defaultSystem}>
-      <BrowserRouter>
-        <Routes>
+    <AuthProvider>
+      <ChakraProvider value={defaultSystem}>
+        <BrowserRouter>
+          <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
       </ChakraProvider>
+    </AuthProvider>
   )
 }
 

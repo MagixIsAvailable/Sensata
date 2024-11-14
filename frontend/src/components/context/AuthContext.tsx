@@ -21,6 +21,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (token: string) => {
     localStorage.setItem('token', token);
     setToken(token);
+
+    
     // You could decode JWT here to set user info
     setUser({ email: 'admin@admin.com', isAdmin: true });
   };
