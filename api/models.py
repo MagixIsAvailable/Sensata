@@ -134,3 +134,11 @@ class GroupJoinSensors(SQLModel, table=True):
     sensor_id_sensor_table: int = Field(
         foreign_key="sensor_table.sensor_id", primary_key=True
     )
+ # Represents the User table with fields for authentication and admin role management
+# Ensure passwords are hashed before saving; `email` must be unique; `is_admin` for RBAC
+class User(SQLModel, table=True):
+    user_id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(unique=True)
+    password: str
+    is_admin: bool = Field(default=False
+    )
