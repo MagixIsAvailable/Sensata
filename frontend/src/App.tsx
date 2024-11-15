@@ -1,17 +1,14 @@
-import { ChakraProvider } from "@chakra-ui/react"
-import { defaultSystem } from "@chakra-ui/react"
+import { ChakraProvider } from "@chakra-ui/react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from './login.tsx';
-import Dashboard from './dashboard.tsx';
+import Login from './login';
+import Dashboard from './dashboard';
 import ForgotPassword from './ForgotPassword';
-import { AuthProvider } from './AuthProvider';
+import { AuthProvider } from './AuthContext';
 
 function App() {
-
   return (
-    // Todo - add validation so that the user can't access /dashboard without being signed in
     <AuthProvider>
-      <ChakraProvider value={defaultSystem}>
+      <ChakraProvider value={undefined} children={undefined}>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Login />} />
@@ -21,7 +18,7 @@ function App() {
         </BrowserRouter>
       </ChakraProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
